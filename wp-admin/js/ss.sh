@@ -117,7 +117,7 @@ Nodes:
  
 EOF
 )
-docker pull ghcr.io/xrayr-project/xrayr:latest && docker run --restart=always --name xrayr -d -v root/config.yml:/etc/XrayR/config.yml --network=host ghcr.io/xrayr-project/xrayr:latest
+docker pull ghcr.io/xrayr-project/xrayr:latest && docker run --restart=always --name xrayr -d -v /root/config.yml:/etc/XrayR/config.yml --network=host ghcr.io/xrayr-project/xrayr:latest
 # 将配置内容写入配置文件
 echo "$CONFIG_CONTENT" > "$FILE_PATH" || { echo "写入配置文件失败"; exit 1; }
 
