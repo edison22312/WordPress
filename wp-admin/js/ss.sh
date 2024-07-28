@@ -27,6 +27,20 @@ else
     echo "Docker 已安装。"
 fi
 
+# 启用 BBR
+echo "启用 BBR..."
+
+# 修改 sysctl 配置文件以启用 BBR
+sudo tee -a /etc/sysctl.conf > /dev/null <<EOF
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+EOF
+
+# 重新加载 sysctl 配置
+sudo sysctl -p || { echo "重新加载 sysctl 配置失败"; exit 1; }
+
+echo "BBR 已启用。"
+
 # 提示用户输入 NodeID
 read -p "Enter NodeID: " NODE_ID
 
@@ -114,13 +128,20 @@ Nodes:
         DNSEnv: # DNS ENV option used by DNS provider
           ALICLOUD_ACCESS_KEY: aaa
           ALICLOUD_SECRET_KEY: bbb
- 
 EOF
 )
-docker pull ghcr.io/xrayr-project/xrayr:latest && docker run --restart=always --name xrayr -d -v /root/config.yml:/etc/XrayR/config.yml --network=host ghcr.io/xrayr-project/xrayr:latest
+
 # 将配置内容写入配置文件
 echo "$CONFIG_CONTENT" > "$FILE_PATH" || { echo "写入配置文件失败"; exit 1; }
 
 echo "配置文件已创建：$FILE_PATH"
 
+# 拉取 Docker 镜像并运行容器
+docker pull ghcr.io/xrayr-project/xrayr:latest || { echo "拉取 Docker 镜像失败"; exit 1; }
 
+docker run --restart=always --name xrayr -d \
+    -v "$FILE_PATH:/etc/XrayR/config.yml" \
+    --network=host \
+    ghcr.io/xrayr-project/xrayr:latest || { echo "启动 Docker 容器失败"; exit 1; }
+
+echo "XrayR 容器已启动。"
